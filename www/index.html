@@ -107,14 +107,148 @@
             height: 34px;
             border-radius: 50%;
             background-color: var(--ball-yellow);
-            background-image: 
+            background-image:
                 radial-gradient(circle at 30% 30%, rgba(255,255,255,0.6) 0%, transparent 50%),
                 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cpath d='M0 16 Q 16 16 32 16 M 16 0 Q 16 16 16 32 M 5 5 Q 16 16 27 27 M 27 5 Q 16 16 5 27' stroke='rgba(0,0,0,0.25)' fill='none' stroke-width='1.5'/%3E%3C/svg%3E");
             border: 2.5px solid #854d0e;
-            color: transparent; 
+            color: transparent;
             z-index: 20;
             box-shadow: 0 5px 10px rgba(0,0,0,0.4), inset 0 -2px 5px rgba(0,0,0,0.2);
         }
+
+        /* Ball type: blue/yellow (ICF) */
+        .token.ball.ball-icf {
+            background-color: #1a56aa;
+            background-image:
+                radial-gradient(circle at 30% 30%, rgba(255,255,255,0.35) 0%, transparent 45%),
+                linear-gradient(to bottom, #1a56aa 0%, #1a56aa 28%, #e8c12a 28%, #e8c12a 72%, #1a56aa 72%, #1a56aa 100%);
+            border-color: #0d3578;
+        }
+
+        /* Ball type: maroon/yellow */
+        .token.ball.ball-maroon {
+            background-color: #7b1e1e;
+            background-image:
+                radial-gradient(circle at 30% 30%, rgba(255,255,255,0.3) 0%, transparent 45%),
+                linear-gradient(to bottom, #7b1e1e 0%, #7b1e1e 28%, #e8c12a 28%, #e8c12a 72%, #7b1e1e 72%, #7b1e1e 100%);
+            border-color: #4a0e0e;
+        }
+
+        .ball-picker {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            margin-left: 4px;
+        }
+
+        .ball-swatch {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2.5px solid transparent;
+            flex-shrink: 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+            transition: border-color 0.15s, transform 0.15s;
+        }
+
+        .ball-swatch.active { border-color: white; transform: scale(1.2); }
+
+        .ball-swatch-yellow {
+            background-color: #facc15;
+            background-image: linear-gradient(to bottom, #facc15 0%, #facc15 100%);
+        }
+        .ball-swatch-icf {
+            background-image: linear-gradient(to bottom, #1a56aa 0%, #1a56aa 28%, #e8c12a 28%, #e8c12a 72%, #1a56aa 72%, #1a56aa 100%);
+        }
+        .ball-swatch-maroon {
+            background-image: linear-gradient(to bottom, #7b1e1e 0%, #7b1e1e 28%, #e8c12a 28%, #e8c12a 72%, #7b1e1e 72%, #7b1e1e 100%);
+        }
+
+        #scoreboard.scoreboard-hidden #scoreboard-body { display: none; }
+        #scoreboard.scoreboard-hidden { padding: 6px 10px 4px; }
+
+        /* ── Boat cockpit ── */
+        .boat-cockpit {
+            position: absolute;
+            width: 10px;
+            height: 16px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.22);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+
+        /* ── Paddle ── */
+        .paddle-wrap {
+            position: absolute;
+            width: 58px;
+            height: 10px;
+            top: 50%;
+            left: 50%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .paddle-shaft {
+            position: absolute;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(to right, #5c3d1e 0%, #b08040 40%, #d4aa60 50%, #b08040 60%, #5c3d1e 100%);
+            border-radius: 2px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .paddle-blade {
+            position: absolute;
+            width: 11px;
+            height: 9px;
+            background: #2a6e32;
+            border: 1px solid rgba(0,0,0,0.35);
+            top: 50%;
+        }
+
+        .paddle-blade-left  { left: -9px;  border-radius: 50% 20% 20% 50% / 50% 50% 50% 50%; transform: translateY(-50%); }
+        .paddle-blade-right { right: -9px; border-radius: 20% 50% 50% 20% / 50% 50% 50% 50%; transform: translateY(-50%) scaleX(-1); }
+
+        /* ── Paddle rotation handle (brown dot at bottom) ── */
+        .paddle-handle {
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            width: 18px;
+            height: 18px;
+            background: #8B6914;
+            border: 2.5px solid #5c3d1e;
+            border-radius: 50%;
+            transform: translateX(-50%);
+            cursor: crosshair;
+            z-index: 11;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+        }
+
+        /* ── 3D mode ── */
+        #pitch-container {
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #pitch-container.mode-3d {
+            transform-origin: center 58%;
+            transform: perspective(900px) rotateX(28deg) scale(1.08);
+        }
+
+        body.mode-3d .token {
+            filter: drop-shadow(0 8px 6px rgba(0,0,0,0.5));
+        }
+
+        body.mode-3d .token.ball {
+            filter: drop-shadow(0 10px 8px rgba(0,0,0,0.55));
+        }
+
+        #btn-3d.active { background-color: #553c9a; border: 1.5px solid #6b46c1; }
 
         .token.active-action {
             transition: none !important;
@@ -295,6 +429,88 @@
             padding: 8px 12px; border-radius: 8px; outline: none; font-weight: 800;
             cursor: pointer;
         }
+
+        #scoreboard {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 14px;
+            padding: 12px 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            z-index: 15;
+            min-width: 54px;
+            backdrop-filter: blur(4px);
+        }
+
+        .score-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .score-label {
+            font-size: 10px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .score-value {
+            font-size: 32px;
+            font-weight: 900;
+            color: white;
+            line-height: 1;
+        }
+
+        .score-divider {
+            width: 28px;
+            height: 1px;
+            background: rgba(255,255,255,0.2);
+        }
+
+        @keyframes goal-flash {
+            0%   { transform: scale(1); }
+            40%  { transform: scale(1.4); }
+            100% { transform: scale(1); }
+        }
+        .goal-scored { animation: goal-flash 0.4s ease-out; }
+
+        #panel-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 4px 0;
+            cursor: pointer;
+            color: #718096;
+            font-size: 12px;
+            user-select: none;
+            border-bottom: 1px solid #4a5568;
+            margin-bottom: 2px;
+        }
+
+        #panel-toggle-pill {
+            width: 36px;
+            height: 4px;
+            background: #718096;
+            border-radius: 2px;
+        }
+
+        .control-panel.collapsed .panel-body {
+            display: none;
+        }
+
+        .control-panel.collapsed #panel-toggle {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
     </style>
 </head>
 <body class="filter-all">
@@ -313,9 +529,30 @@
         <div class="goal-area" style="bottom: 0; left: 50%; transform: translateX(-50%); border-bottom: none;" data-i18n="goal">GOAL</div>
 
         <canvas id="draw-canvas"></canvas>
+
+        <div id="scoreboard">
+            <div onclick="toggleScoreboard()" style="cursor:pointer;width:100%;display:flex;justify-content:center;padding:2px 0 4px;">
+                <div style="width:28px;height:3px;background:rgba(255,255,255,0.3);border-radius:2px;"></div>
+            </div>
+            <div id="scoreboard-body">
+                <div class="score-item">
+                    <span class="score-label" style="color:#ef4444">RED</span>
+                    <span class="score-value" id="score-home">0</span>
+                </div>
+                <div class="score-divider"></div>
+                <div class="score-item">
+                    <span class="score-label" style="color:#3b82f6">BLUE</span>
+                    <span class="score-value" id="score-away">0</span>
+                </div>
+                <div class="score-divider"></div>
+                <button onclick="resetScore()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:8px;color:#a0aec0;font-size:10px;font-weight:800;padding:4px 6px;cursor:pointer;width:100%;">RST</button>
+            </div>
+        </div>
     </div>
 
-    <div class="control-panel">
+    <div class="control-panel" id="control-panel">
+        <div id="panel-toggle" onclick="togglePanel()"><div id="panel-toggle-pill"></div></div>
+        <div class="panel-body">
         <div class="filter-bar">
             <div onclick="setCategoryFilter('all')" id="filter-all" class="filter-btn active" data-i18n="all">All</div>
             <div onclick="setCategoryFilter('defense')" id="filter-defense" class="filter-btn" data-i18n="defense">Defense</div>
@@ -355,8 +592,15 @@
                 <option value="en">English</option>
                 <option value="zh">繁體中文</option>
             </select>
+            <div class="ball-picker">
+                <div class="ball-swatch ball-swatch-yellow active" onclick="setBallType('yellow')" title="Yellow"></div>
+                <div class="ball-swatch ball-swatch-icf" onclick="setBallType('icf')" title="Blue/Yellow"></div>
+                <div class="ball-swatch ball-swatch-maroon" onclick="setBallType('maroon')" title="Maroon/Yellow"></div>
+            </div>
+            <button id="btn-3d" onclick="toggle3D()" class="btn btn-secondary">3D</button>
             <button onclick="resetAll()" class="btn btn-secondary" style="margin-left: auto;" data-i18n="resetAll">Reset All</button>
         </div>
+        </div><!-- end panel-body -->
     </div>
 </div>
 
@@ -397,7 +641,7 @@
         }
     };
 
-    let currentLang = 'en', isDrawingMode = false, isDrawing = false, editMode = false, tokens = [], ball = null, customTactics = [], selectedSaveCategory = 'offense';
+    let currentLang = 'en', isDrawingMode = false, isDrawing = false, editMode = false, tokens = [], ball = null, customTactics = [], selectedSaveCategory = 'offense', homeScore = 0, awayScore = 0;
 
     function setLanguage(lang) {
         currentLang = lang;
@@ -434,6 +678,14 @@
 
     function updateTokenTransform(token) {
         token.el.style.transform = `translate(-50%, -50%) rotate(${token.rotation}deg)`;
+        if (token.paddleRotation !== undefined) updatePaddleTransform(token);
+    }
+
+    function updatePaddleTransform(token) {
+        const pw = token.el.querySelector('.paddle-wrap');
+        if (!pw) return;
+        // paddleRotation is relative to the boat, so apply directly
+        pw.style.transform = `translate(-50%, -50%) rotate(${token.paddleRotation ?? 0}deg)`;
     }
 
     function createToken(type, label, leftPct, topPct, initialRotation) {
@@ -443,27 +695,34 @@
         el.style.top = typeof topPct === 'string' ? topPct : `${topPct}%`;
         if (type !== 'ball') {
             const h = document.createElement('div'); h.className = 'rotation-handle'; el.appendChild(h);
+            const cockpit = document.createElement('div'); cockpit.className = 'boat-cockpit'; el.appendChild(cockpit);
+            const pw = document.createElement('div'); pw.className = 'paddle-wrap';
+            pw.innerHTML = '<div class="paddle-shaft"></div><div class="paddle-blade paddle-blade-left"></div><div class="paddle-blade paddle-blade-right"></div>';
+            el.appendChild(pw);
+            const ph = document.createElement('div'); ph.className = 'paddle-handle'; el.appendChild(ph);
         }
         pitch.appendChild(el);
-        const t = { el, type, rotation: initialRotation };
+        const t = { el, type, rotation: initialRotation, paddleRotation: 0 };
         updateTokenTransform(t); tokens.push(t);
         if (type === 'ball') ball = t;
     }
 
     function setupInteraction() {
-        let active = null, rotating = false, ox, oy, sa, sr, lastTap = 0;
+        let active = null, rotating = false, rotatingPaddle = false, ox, oy, sa, sr, lastTap = 0;
         const getAngle = (cx, cy, ex, ey) => Math.atan2(ey - cy, ex - cx) * (180 / Math.PI) + 90;
 
         const start = (e) => {
             if (isDrawingMode) return;
-            const target = e.target.closest('.token'), handle = e.target.closest('.rotation-handle');
+            const target = e.target.closest('.token');
+            const handle = e.target.closest('.rotation-handle');
+            const paddleHandle = e.target.closest('.paddle-handle');
             if (!target) return;
 
             const now = Date.now();
             if (now - lastTap < 300) {
                 active = tokens.find(t => t.el === target);
-                if (active.type === 'ball') { 
-                    active.el.style.left = '50%'; active.el.style.top = '50%'; 
+                if (active.type === 'ball') {
+                    active.el.style.left = '50%'; active.el.style.top = '50%';
                 } else {
                     active.rotation = (Math.round(active.rotation / 45) * 45 + 45) % 360;
                     updateTokenTransform(active);
@@ -474,11 +733,12 @@
 
             active = tokens.find(t => t.el === target);
             active.el.classList.add('active-action');
-            rotating = !!handle;
+            rotating = !!(handle || paddleHandle);
+            rotatingPaddle = !!paddleHandle;
             const r = active.el.getBoundingClientRect(), t = e.touches ? e.touches[0] : e;
             if (rotating) {
                 sa = getAngle(r.left + r.width/2, r.top + r.height/2, t.clientX, t.clientY);
-                sr = active.rotation;
+                sr = rotatingPaddle ? (active.paddleRotation ?? 0) : active.rotation;
             } else {
                 ox = t.clientX - r.left - r.width/2; oy = t.clientY - r.top - r.height/2;
             }
@@ -490,8 +750,14 @@
             const t = e.touches ? e.touches[0] : e, pr = pitch.getBoundingClientRect();
             if (rotating) {
                 const r = active.el.getBoundingClientRect();
-                active.rotation = sr + (getAngle(r.left + r.width/2, r.top + r.height/2, t.clientX, t.clientY) - sa);
-                updateTokenTransform(active);
+                const newAngle = sr + (getAngle(r.left + r.width/2, r.top + r.height/2, t.clientX, t.clientY) - sa);
+                if (rotatingPaddle) {
+                    active.paddleRotation = newAngle;
+                    updatePaddleTransform(active);
+                } else {
+                    active.rotation = newAngle;
+                    updateTokenTransform(active);
+                }
             } else {
                 let x = Math.max(0, Math.min(t.clientX - pr.left - ox, pr.width));
                 let y = Math.max(0, Math.min(t.clientY - pr.top - oy, pr.height));
@@ -499,7 +765,13 @@
             }
         };
 
-        const end = () => { if (active) active.el.classList.remove('active-action'); active = null; rotating = false; };
+        const end = () => {
+            if (active) {
+                active.el.classList.remove('active-action');
+                if (active.type === 'ball') checkGoal(active);
+            }
+            active = null; rotating = false; rotatingPaddle = false;
+        };
 
         pitch.addEventListener('touchstart', start, { passive: false });
         window.addEventListener('touchmove', move, { passive: false });
@@ -545,7 +817,7 @@
         const name = nameInput.value.trim(); if (!name) return;
         customTactics.push({
             id: Date.now(), name, category: selectedSaveCategory,
-            data: tokens.map(t => ({ label: t.el.innerText, type: t.type, left: t.el.style.left, top: t.el.style.top, rotation: t.rotation }))
+            data: tokens.map(t => ({ label: t.el.innerText, type: t.type, left: t.el.style.left, top: t.el.style.top, rotation: t.rotation, paddleRotation: t.paddleRotation }))
         });
         saveToStorage(); renderCustomTactics(); closeSaveModal();
     }
@@ -555,7 +827,7 @@
         const tactic = customTactics.find(t => t.id === id); if (!tactic) return;
         tactic.data.forEach(s => {
             const target = tokens.find(tk => tk.type === s.type && tk.el.innerText === s.label);
-            if (target) { target.el.style.left = s.left; target.el.style.top = s.top; target.rotation = s.rotation; updateTokenTransform(target); }
+            if (target) { target.el.style.left = s.left; target.el.style.top = s.top; target.rotation = s.rotation; target.paddleRotation = s.paddleRotation ?? 0; updateTokenTransform(target); }
         });
     }
 
@@ -575,11 +847,61 @@
         }[name];
         players.forEach((p, i) => {
             p.el.style.left = `${f[i].x}%`; p.el.style.top = isAway ? `${100-f[i].y}%` : `${f[i].y}%`;
-            p.rotation = isAway ? f[i].r + 180 : f[i].r; updateTokenTransform(p);
+            p.rotation = isAway ? f[i].r + 180 : f[i].r; updateTokenTransform(p); updatePaddleTransform(p);
         });
     }
 
-    function resetAll() { setFormation('home','reset'); setFormation('away','reset'); ball.el.style.left='50%'; ball.el.style.top='50%'; ctx.clearRect(0,0,canvas.width,canvas.height); }
+    function checkGoal(ballToken) {
+        const br = ballToken.el.getBoundingClientRect();
+        const cx = br.left + br.width / 2, cy = br.top + br.height / 2;
+        document.querySelectorAll('.goal-area').forEach(goal => {
+            const gr = goal.getBoundingClientRect();
+            if (cx >= gr.left && cx <= gr.right && cy >= gr.top && cy <= gr.bottom) {
+                const isTopGoal = goal.style.top === '0px' || goal.style.top === '0';
+                const scoreEl = isTopGoal
+                    ? document.getElementById('score-home')   // red attacks top
+                    : document.getElementById('score-away');  // blue attacks bottom
+                if (isTopGoal) homeScore++; else awayScore++;
+                scoreEl.textContent = isTopGoal ? homeScore : awayScore;
+                scoreEl.classList.remove('goal-scored');
+                void scoreEl.offsetWidth; // reflow to restart animation
+                scoreEl.classList.add('goal-scored');
+            }
+        });
+    }
+
+    function toggleScoreboard() {
+        document.getElementById('scoreboard').classList.toggle('scoreboard-hidden');
+    }
+
+    function setBallType(type) {
+        ball.el.classList.remove('ball-icf', 'ball-maroon');
+        if (type !== 'yellow') ball.el.classList.add(`ball-${type}`);
+        document.querySelectorAll('.ball-swatch').forEach(s => s.classList.remove('active'));
+        document.querySelector(`.ball-swatch-${type}`).classList.add('active');
+    }
+
+    function resetScore() { homeScore=0; awayScore=0; document.getElementById('score-home').textContent='0'; document.getElementById('score-away').textContent='0'; }
+    function resetAll() {
+        setFormation('home','reset'); setFormation('away','reset');
+        tokens.filter(t => t.type !== 'ball').forEach(t => { t.paddleRotation = 0; updatePaddleTransform(t); });
+        ball.el.style.left='50%'; ball.el.style.top='50%';
+        ctx.clearRect(0,0,canvas.width,canvas.height); resetScore();
+    }
+
+    function toggle3D() {
+        const is3D = pitch.classList.toggle('mode-3d');
+        document.body.classList.toggle('mode-3d', is3D);
+        document.getElementById('btn-3d').classList.toggle('active', is3D);
+    }
+
+    function togglePanel() {
+        const panel = document.getElementById('control-panel');
+        const btn = document.getElementById('panel-toggle');
+        const collapsed = panel.classList.toggle('collapsed');
+        // pill handle — no text change needed
+        resizeCanvas();
+    }
     window.onload = init;
 </script>
 </body>
