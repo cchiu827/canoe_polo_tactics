@@ -165,8 +165,6 @@
             background-image: linear-gradient(to bottom, #7b1e1e 0%, #7b1e1e 28%, #e8c12a 28%, #e8c12a 72%, #7b1e1e 72%, #7b1e1e 100%);
         }
 
-        #scoreboard.scoreboard-hidden #scoreboard-body { display: none; }
-        #scoreboard.scoreboard-hidden { padding: 6px 10px 4px; }
 
 
         .token.active-action {
@@ -350,57 +348,7 @@
             cursor: pointer;
         }
 
-        #scoreboard {
-            position: absolute;
-            left: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: rgba(0, 0, 0, 0.55);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 14px;
-            padding: 12px 10px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-            z-index: 15;
-            min-width: 54px;
-            backdrop-filter: blur(4px);
-        }
 
-        .score-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 2px;
-        }
-
-        .score-label {
-            font-size: 10px;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-        }
-
-        .score-value {
-            font-size: 32px;
-            font-weight: 900;
-            color: white;
-            line-height: 1;
-        }
-
-        .score-divider {
-            width: 28px;
-            height: 1px;
-            background: rgba(255,255,255,0.2);
-        }
-
-        @keyframes goal-flash {
-            0%   { transform: scale(1); }
-            40%  { transform: scale(1.4); }
-            100% { transform: scale(1); }
-        }
-        .goal-scored { animation: goal-flash 0.4s ease-out; }
 
         #panel-toggle {
             display: flex;
@@ -431,6 +379,80 @@
             border-bottom: none;
             margin-bottom: 0;
         }
+
+        /* ── Floating toolbars ── */
+        .floating-tb {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            background: rgba(26,32,44,0.2);
+            border-radius: 18px;
+            padding: 10px 6px;
+            z-index: 50;
+        }
+        #floating-tactics-toolbar {
+            left: 10px;
+            display: none;
+            overflow: visible;
+        }
+        #ftb-tactics-container {
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
+            scrollbar-width: none;
+            touch-action: pan-y;
+            flex: 1;
+            min-height: 0;
+        }
+        #ftb-tactics-container::-webkit-scrollbar { display: none; }
+        #floating-toolbar {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            background: rgba(26,32,44,0.2);
+            border-radius: 18px;
+            padding: 10px 6px;
+            z-index: 50;
+        }
+        .ftb-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            transition: opacity 0.15s;
+        }
+        .ftb-btn:disabled { opacity: 0.35; }
+        .ftb-red   { background: #c53030; color: white; }
+        .ftb-blue  { background: #2b6cb0; color: white; }
+        .ftb-dark  { background: #4a5568; color: white; }
+        .ftb-green { background: #276749; color: white; }
+        .ftb-divider {
+            width: 22px; height: 1px;
+            background: rgba(255,255,255,0.15);
+            margin: 2px 0;
+        }
+        .ftb-team-label {
+            font-size: 9px;
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
     </style>
 </head>
 <body class="filter-all">
@@ -450,23 +472,46 @@
 
         <canvas id="draw-canvas"></canvas>
 
-        <div id="scoreboard">
-            <div onclick="toggleScoreboard()" style="cursor:pointer;width:100%;display:flex;justify-content:center;padding:2px 0 4px;">
-                <div style="width:28px;height:3px;background:rgba(255,255,255,0.3);border-radius:2px;"></div>
-            </div>
-            <div id="scoreboard-body">
-                <div class="score-item">
-                    <span class="score-label" style="color:#ef4444">RED</span>
-                    <span class="score-value" id="score-home">0</span>
-                </div>
-                <div class="score-divider"></div>
-                <div class="score-item">
-                    <span class="score-label" style="color:#3b82f6">BLUE</span>
-                    <span class="score-value" id="score-away">0</span>
-                </div>
-                <div class="score-divider"></div>
-                <button onclick="resetScore()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:8px;color:#a0aec0;font-size:10px;font-weight:800;padding:4px 6px;cursor:pointer;width:100%;">RST</button>
-            </div>
+        <!-- Floating replay seek bar -->
+        <div id="replay-seek-row"
+            ontouchstart="event.stopPropagation()"
+            onclick="event.stopPropagation()"
+            style="display:flex;position:absolute;bottom:10px;left:50%;transform:translateX(-50%);width:88%;max-width:420px;background:rgba(26,32,44,0.82);border-radius:14px;padding:7px 14px;align-items:center;gap:8px;z-index:60;box-shadow:0 2px 10px rgba(0,0,0,0.4);">
+            <button id="btn-pause-bar" onclick="toggleReplayPause()" style="background:none;border:none;color:#f6ad55;font-size:18px;line-height:1;cursor:pointer;padding:0;min-width:20px;">⏸</button>
+            <span id="replay-cur-time" style="color:#f6ad55;font-size:11px;min-width:28px;">0.0s</span>
+            <input type="range" id="replay-seekbar" min="0" max="1000" value="0"
+                oninput="seekReplay(this.value)"
+                onmousedown="replayPaused=true" onmouseup="replayPaused=false;replayWallStart=Date.now()"
+                ontouchstart="replayPaused=true" ontouchend="replayPaused=false;replayWallStart=Date.now()"
+                style="flex:1;cursor:pointer;accent-color:#f6ad55;height:4px;">
+            <span id="replay-total-time" style="color:#718096;font-size:11px;min-width:28px;text-align:right;">0.0s</span>
+        </div>
+
+        <!-- Left floating tactics toolbar -->
+        <div id="floating-tactics-toolbar" class="floating-tb"
+            ontouchstart="event.stopPropagation()"
+            onclick="event.stopPropagation()">
+            <span class="ftb-team-label" style="color:#ecc94b;">SAVED</span>
+            <div id="ftb-tactics-container" style="display:none;flex-direction:column;align-items:center;gap:5px;"></div>
+        </div>
+
+        <!-- Right floating toolbar -->
+        <div id="floating-toolbar" class="floating-tb"
+            ontouchstart="event.stopPropagation()"
+            onclick="event.stopPropagation()">
+            <span class="ftb-team-label" style="color:#ef4444;">RED</span>
+            <button class="ftb-btn ftb-red" onclick="addBoat('home')">+</button>
+            <button class="ftb-btn ftb-red" onclick="removeBoat('home')">−</button>
+            <div class="ftb-divider"></div>
+            <span class="ftb-team-label" style="color:#3b82f6;">BLU</span>
+            <button class="ftb-btn ftb-blue" onclick="addBoat('away')">+</button>
+            <button class="ftb-btn ftb-blue" onclick="removeBoat('away')">−</button>
+            <div class="ftb-divider"></div>
+            <button class="ftb-btn ftb-dark" onclick="setFormation('home','reset');setFormation('away','reset')" title="Reset to line" style="font-size:18px;">↺</button>
+            <div class="ftb-divider"></div>
+            <button class="ftb-btn ftb-dark" id="ftb-record" onclick="toggleRecord()">⏺</button>
+            <button class="ftb-btn ftb-dark" id="ftb-replay" onclick="startReplay()" disabled>▶</button>
+            <button class="ftb-btn ftb-green" id="ftb-save" onclick="openSaveRecModal()" disabled>💾</button>
         </div>
     </div>
 
@@ -483,7 +528,6 @@
             <span class="row-label" style="color:#ef4444" data-i18n="redTeamLabel">Red</span>
             <button onclick="setFormation('home', '1-3-1')" class="btn btn-red tactic-def">1-3-1</button>
             <button onclick="setFormation('home', '2-2-1')" class="btn btn-red tactic-def">2-2-1</button>
-            <button onclick="setFormation('home', 'attack')" class="btn btn-red tactic-off" data-i18n="attack">Attack</button>
             <button onclick="setFormation('home', 'reset')" class="btn btn-red" data-i18n="line">Line</button>
             <div style="margin-left:auto;display:flex;align-items:center;gap:4px;">
                 <button onclick="removeBoat('home')" class="btn btn-red" style="padding:6px 10px;font-size:16px;line-height:1;">−</button>
@@ -496,7 +540,6 @@
             <span class="row-label" style="color:#3b82f6" data-i18n="blueTeamLabel">Blue</span>
             <button onclick="setFormation('away', '1-3-1')" class="btn btn-blue tactic-def">1-3-1</button>
             <button onclick="setFormation('away', '2-2-1')" class="btn btn-blue tactic-def">2-2-1</button>
-            <button onclick="setFormation('away', 'attack')" class="btn btn-blue tactic-off" data-i18n="attack">Attack</button>
             <button onclick="setFormation('away', 'reset')" class="btn btn-blue" data-i18n="line">Line</button>
             <div style="margin-left:auto;display:flex;align-items:center;gap:4px;">
                 <button onclick="removeBoat('away')" class="btn btn-blue" style="padding:6px 10px;font-size:16px;line-height:1;">−</button>
@@ -520,16 +563,6 @@
             <button id="btn-save-rec" onclick="openSaveRecModal()" class="btn btn-success" disabled style="opacity:0.4;">💾 Save</button>
             <span id="rec-timer" style="color:#f6ad55;font-weight:900;font-size:12px;margin-left:4px;"></span>
         </div>
-        <div id="replay-seek-row" style="display:none;padding:2px 8px 4px;align-items:center;gap:6px;flex-shrink:0;">
-            <span id="replay-cur-time" style="color:#f6ad55;font-size:11px;min-width:28px;">0.0s</span>
-            <input type="range" id="replay-seekbar" min="0" max="1000" value="0"
-                oninput="seekReplay(this.value)"
-                onmousedown="replayPaused=true" onmouseup="replayPaused=false;replayWallStart=Date.now()"
-                ontouchstart="replayPaused=true" ontouchend="replayPaused=false;replayWallStart=Date.now()"
-                style="flex:1;cursor:pointer;accent-color:#f6ad55;height:4px;">
-            <span id="replay-total-time" style="color:#718096;font-size:11px;min-width:28px;text-align:right;">0.0s</span>
-        </div>
-
         <div class="control-row">
             <span class="row-label" data-i18n="tools">Tools</span>
             <button id="toggle-draw" class="btn btn-secondary" data-i18n="draw">Draw</button>
@@ -586,7 +619,7 @@
         }
     };
 
-    let currentLang = 'en', isDrawingMode = false, isDrawing = false, editMode = false, tokens = [], ball = null, customTactics = [], selectedSaveCategory = 'offense', homeScore = 0, awayScore = 0;
+    let currentLang = 'en', isDrawingMode = false, isDrawing = false, editMode = false, tokens = [], ball = null, customTactics = [], selectedSaveCategory = 'offense';
 
     function setLanguage(lang) {
         currentLang = lang;
@@ -606,7 +639,7 @@
     const pitch = document.getElementById('pitch-container'), canvas = document.getElementById('draw-canvas'), ctx = canvas.getContext('2d'), toggleDrawBtn = document.getElementById('toggle-draw'), clearDrawBtn = document.getElementById('clear-draw'), savedContainer = document.getElementById('saved-tactics-container'), nameInput = document.getElementById('tactic-name-input'), modalOverlay = document.getElementById('modal-overlay');
 
     function init() {
-        resizeCanvas(); createTokens(); setupInteraction(); setupDrawing(); loadFromStorage(); setLanguage('en'); initPageDots();
+        resizeCanvas(); createTokens(); setupInteraction(); setupDrawing(); loadFromStorage(); setLanguage('en'); initPageDots(); initTacticsToolbarScroll();
         window.addEventListener('resize', resizeCanvas);
     }
 
@@ -644,6 +677,31 @@
         let active = null, rotating = false, ox, oy, sa, sr, lastTap = 0;
         let ballCarried = false, ballOffX = 0, ballOffY = 0;
         const getAngle = (cx, cy, ex, ey) => Math.atan2(ey - cy, ex - cx) * (180 / Math.PI) + 90;
+
+        // Tap-on-pitch to toggle panel
+        const isOnToolbar = (e) => !!(e.target.closest('#floating-toolbar') || e.target.closest('#floating-tactics-toolbar'));
+        let pitchTapStart = null;
+        pitch.addEventListener('touchstart', (e) => {
+            if (isDrawingMode) return;
+            if (e.target.closest('.token')) return;
+            if (isOnToolbar(e)) return;
+            const t = e.touches[0];
+            pitchTapStart = { x: t.clientX, y: t.clientY };
+        }, { passive: true });
+        pitch.addEventListener('touchend', (e) => {
+            if (!pitchTapStart) return;
+            if (isOnToolbar(e)) { pitchTapStart = null; return; }
+            const t = e.changedTouches[0];
+            const dx = t.clientX - pitchTapStart.x, dy = t.clientY - pitchTapStart.y;
+            pitchTapStart = null;
+            if (Math.hypot(dx, dy) < 10) togglePanel();
+        }, { passive: true });
+        pitch.addEventListener('click', (e) => {
+            if (isDrawingMode) return;
+            if (e.target.closest('.token')) return;
+            if (isOnToolbar(e)) return;
+            togglePanel();
+        });
 
         const start = (e) => {
             if (isDrawingMode) return;
@@ -711,7 +769,6 @@
         const end = () => {
             if (active) {
                 active.el.classList.remove('active-action');
-                if (active.type === 'ball') checkGoal(active);
             }
             active = null; rotating = false;
         };
@@ -769,9 +826,29 @@
         saveToStorage(); renderCustomTactics(); closeSaveModal();
     }
 
+    let activeFtbTacticId = null;
+    function clearFtbTacticHighlight() {
+        document.querySelectorAll('#ftb-tactics-container [data-tactic-id]').forEach(b => {
+            b.style.border = '2px solid transparent';
+            b.style.color = 'white';
+            b.style.textShadow = '';
+        });
+        activeFtbTacticId = null;
+    }
     function loadCustomTactic(id) {
         if (editMode) { deleteTactic(id); return; }
         const tactic = customTactics.find(t => t.id === id); if (!tactic) return;
+        // Toggle off if already selected
+        if (activeFtbTacticId === id) { clearFtbTacticHighlight(); return; }
+        // Highlight selected tactic in floating toolbar
+        clearFtbTacticHighlight();
+        activeFtbTacticId = id;
+        const activeBtn = document.querySelector(`#ftb-tactics-container [data-tactic-id="${id}"]`);
+        if (activeBtn) {
+            activeBtn.style.border = '2px solid #ecc94b';
+            activeBtn.style.color = '#ecc94b';
+            activeBtn.style.textShadow = '0 0 6px #ecc94b88';
+        }
         if (tactic.recording) {
             recordFrames = tactic.recording;
             startReplay();
@@ -783,17 +860,21 @@
         }
     }
 
-    function deleteTactic(id) { customTactics = customTactics.filter(t => t.id !== id); saveToStorage(); renderCustomTactics(); }
+    function deleteTactic(id) { if (activeFtbTacticId === id) clearFtbTacticHighlight(); customTactics = customTactics.filter(t => t.id !== id); saveToStorage(); renderCustomTactics(); }
     function toggleEditMode() { editMode = !editMode; document.getElementById('custom-tactics-row').classList.toggle('edit-mode', editMode); document.getElementById('toggle-delete').innerText = editMode ? translations[currentLang].done : translations[currentLang].edit; }
     function saveToStorage() { localStorage.setItem('cp_tactician_saves', JSON.stringify(customTactics)); }
     function loadFromStorage() { const s = localStorage.getItem('cp_tactician_saves'); if (s) { customTactics = JSON.parse(s); renderCustomTactics(); } }
 
     function renderCustomTactics() {
         savedContainer.innerHTML = '';
+        const ftbContainer = document.getElementById('ftb-tactics-container');
+        if (ftbContainer) ftbContainer.innerHTML = '';
         const filter = document.body.className.replace('filter-', '');
         customTactics.forEach(tactic => {
             if (filter === 'offense' && tactic.category !== 'offense') return;
             if (filter === 'defense' && tactic.category !== 'defense') return;
+
+            // Main panel button
             const wrap = document.createElement('div');
             wrap.style.position = 'relative';
             wrap.style.display = 'inline-block';
@@ -813,6 +894,34 @@
             wrap.appendChild(btn);
             wrap.appendChild(del);
             savedContainer.appendChild(wrap);
+
+            // Floating toolbar button
+            if (ftbContainer) {
+                const ftbWrap = document.createElement('div');
+                ftbWrap.style.cssText = 'position:relative;display:inline-flex;';
+                const ftbBtn = document.createElement('button');
+                ftbBtn.className = 'ftb-btn ftb-dark';
+                ftbBtn.dataset.tacticId = tactic.id;
+                ftbBtn.style.width = '44px';
+                ftbBtn.style.height = '44px';
+                ftbBtn.style.borderRadius = '10px';
+                ftbBtn.style.fontSize = '9px';
+                ftbBtn.style.fontWeight = '900';
+                ftbBtn.style.padding = '2px';
+                ftbBtn.style.overflow = 'hidden';
+                ftbBtn.style.wordBreak = 'break-all';
+                ftbBtn.style.lineHeight = '1.1';
+                ftbBtn.style.border = '2px solid transparent';
+                ftbBtn.textContent = tactic.name;
+                if (tactic.recording) {
+                    const dot = document.createElement('span');
+                    dot.style.cssText = 'position:absolute;top:2px;right:2px;width:7px;height:7px;border-radius:50%;background:#e53e3e;pointer-events:none;';
+                    ftbWrap.appendChild(dot);
+                }
+                ftbBtn.onclick = () => loadCustomTactic(tactic.id);
+                ftbWrap.appendChild(ftbBtn);
+                ftbContainer.appendChild(ftbWrap);
+            }
         });
     }
 
@@ -877,28 +986,6 @@
         return counts;
     }
 
-    function checkGoal(ballToken) {
-        const br = ballToken.el.getBoundingClientRect();
-        const cx = br.left + br.width / 2, cy = br.top + br.height / 2;
-        document.querySelectorAll('.goal-area').forEach(goal => {
-            const gr = goal.getBoundingClientRect();
-            if (cx >= gr.left && cx <= gr.right && cy >= gr.top && cy <= gr.bottom) {
-                const isTopGoal = goal.style.top === '0px' || goal.style.top === '0';
-                const scoreEl = isTopGoal
-                    ? document.getElementById('score-home')   // red attacks top
-                    : document.getElementById('score-away');  // blue attacks bottom
-                if (isTopGoal) homeScore++; else awayScore++;
-                scoreEl.textContent = isTopGoal ? homeScore : awayScore;
-                scoreEl.classList.remove('goal-scored');
-                void scoreEl.offsetWidth; // reflow to restart animation
-                scoreEl.classList.add('goal-scored');
-            }
-        });
-    }
-
-    function toggleScoreboard() {
-        document.getElementById('scoreboard').classList.toggle('scoreboard-hidden');
-    }
 
     function setBallType(type) {
         ball.el.classList.remove('ball-icf', 'ball-maroon');
@@ -932,21 +1019,64 @@
         document.getElementById(type === 'home' ? 'home-count' : 'away-count').textContent = existing.length - 1;
     }
 
-    function resetScore() { homeScore=0; awayScore=0; document.getElementById('score-home').textContent='0'; document.getElementById('score-away').textContent='0'; }
     function resetAll() {
         setFormation('home','reset'); setFormation('away','reset');
         ball.el.style.left='50%'; ball.el.style.top='50%';
-        ctx.clearRect(0,0,canvas.width,canvas.height); resetScore();
+        ctx.clearRect(0,0,canvas.width,canvas.height);
     }
 
     function togglePanel() {
-        document.getElementById('control-panel').classList.toggle('collapsed');
+        const collapsed = document.getElementById('control-panel').classList.toggle('collapsed');
+        const show = collapsed ? 'flex' : 'none';
+        document.getElementById('floating-toolbar').style.display = show;
+        const ltb = document.getElementById('floating-tactics-toolbar');
+        ltb.style.display = show;
+        const ftbList = document.getElementById('ftb-tactics-container');
+        if (collapsed) {
+            if (ftbList) ftbList.style.display = 'flex';
+            requestAnimationFrame(() => {
+                const rh = document.getElementById('floating-toolbar').offsetHeight;
+                ltb.style.height = rh + 'px';
+                ltb.style.maxHeight = rh + 'px';
+            });
+        } else {
+            if (ftbList) ftbList.style.display = 'none';
+            ltb.style.height = '';
+            ltb.style.maxHeight = '';
+        }
         resizeCanvas();
+    }
+
+    function syncFloatingToolbar() {
+        const recBtn = document.getElementById('btn-record');
+        const replayBtn = document.getElementById('btn-replay');
+        const saveBtn = document.getElementById('btn-save-rec');
+        const ftbRecord = document.getElementById('ftb-record');
+        const ftbReplay = document.getElementById('ftb-replay');
+        const ftbSave = document.getElementById('ftb-save');
+        ftbRecord.textContent = recBtn.innerHTML.replace(/<[^>]+>/g, '').trim() || recBtn.textContent;
+        ftbRecord.style.background = recBtn.style.background || '';
+        ftbReplay.disabled = replayBtn.disabled;
+        ftbSave.disabled = saveBtn.disabled;
     }
 
     function scrollToPage(idx) {
         const pc = document.getElementById('pages-container');
         pc.scrollTo({ left: pc.offsetWidth * idx, behavior: 'smooth' });
+    }
+
+    function initTacticsToolbarScroll() {
+        const list = document.getElementById('ftb-tactics-container');
+        let startY = 0;
+        list.addEventListener('touchstart', (e) => {
+            startY = e.touches[0].clientY;
+        }, { passive: true });
+        list.addEventListener('touchmove', (e) => {
+            const dy = e.touches[0].clientY - startY;
+            const atTop = list.scrollTop === 0 && dy > 0;
+            const atBottom = list.scrollTop + list.clientHeight >= list.scrollHeight - 1 && dy < 0;
+            if (!atTop && !atBottom) e.stopPropagation();
+        }, { passive: true });
     }
 
     function initPageDots() {
@@ -957,6 +1087,7 @@
             dots.forEach((d, i) => d.classList.toggle('active', i === idx));
         }, { passive: true });
     }
+
 
     // ── Record / Replay ──────────────────────────────────────────────────────
     let recording = false;
@@ -996,6 +1127,7 @@
                 replayBtn.disabled = false; replayBtn.style.opacity = '1';
                 saveBtn.disabled = false; saveBtn.style.opacity = '1';
             }
+            syncFloatingToolbar();
         } else {
             // Start recording — clear any previous
             recordFrames = [];
@@ -1006,6 +1138,7 @@
                 captureFrame();
                 const elapsed = Math.floor((Date.now() - recordStart) / 1000);
                 document.getElementById('rec-timer').textContent = `${elapsed}s`;
+                document.getElementById('ftb-record').textContent = '⏹';
             }, 100);
             document.getElementById('btn-record').innerHTML = '⏹ Stop';
             document.getElementById('btn-record').style.background = '#c53030';
@@ -1014,6 +1147,8 @@
             const saveBtn = document.getElementById('btn-save-rec');
             replayBtn.disabled = true; replayBtn.style.opacity = '0.4';
             saveBtn.disabled = true; saveBtn.style.opacity = '0.4';
+            syncFloatingToolbar();
+            document.getElementById('ftb-record').style.background = '#c53030';
         }
     }
 
@@ -1043,8 +1178,8 @@
         replaying = false;
         replayPaused = false;
         tokens.forEach(tk => tk.el.style.transition = '');
-        document.getElementById('replay-seek-row').style.display = 'none';
         document.getElementById('btn-pause').style.display = 'none';
+        document.getElementById('btn-pause-bar').textContent = '⏸';
         document.getElementById('btn-replay').style.display = '';
     }
 
@@ -1073,9 +1208,9 @@
         seekbar.max = duration; seekbar.value = 0;
         document.getElementById('replay-total-time').textContent = (duration / 1000).toFixed(1) + 's';
         document.getElementById('replay-cur-time').textContent = '0.0s';
-        document.getElementById('replay-seek-row').style.display = 'flex';
         document.getElementById('btn-pause').style.display = '';
         document.getElementById('btn-pause').textContent = '⏸';
+        document.getElementById('btn-pause-bar').textContent = '⏸';
         document.getElementById('btn-replay').style.display = 'none';
         applyReplayFrame(recordFrames[0]);
         replayTickId = setInterval(replayTick, 50);
@@ -1087,10 +1222,12 @@
             replayWallStart = Date.now();
             replayPaused = false;
             document.getElementById('btn-pause').textContent = '⏸';
+            document.getElementById('btn-pause-bar').textContent = '⏸';
         } else {
             replayOffsetMs += Date.now() - replayWallStart;
             replayPaused = true;
             document.getElementById('btn-pause').textContent = '▶';
+            document.getElementById('btn-pause-bar').textContent = '▶';
         }
     }
 
