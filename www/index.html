@@ -350,25 +350,15 @@
 
 
 
-        #panel-toggle {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            padding: 4px 0;
-            cursor: pointer;
-            color: #718096;
-            font-size: 12px;
-            user-select: none;
-            border-bottom: 1px solid #4a5568;
-            margin-bottom: 2px;
+        #panel-toggle { display: none; }
+        #panel-toggle-pill { display: none; }
+        @keyframes rec-pulse {
+            0%, 100% { box-shadow: 0 0 10px #e53e3e88; }
+            50% { box-shadow: 0 0 22px #e53e3ecc; }
         }
 
-        #panel-toggle-pill {
-            width: 36px;
-            height: 4px;
-            background: #718096;
-            border-radius: 2px;
+        .control-panel.collapsed {
+            display: none !important;
         }
 
         .control-panel.collapsed .panel-body {
@@ -393,6 +383,13 @@
             border-radius: 18px;
             padding: 10px 6px;
             z-index: 50;
+            pointer-events: none;
+        }
+        .floating-tb button,
+        .floating-tb input,
+        .floating-tb span.ftb-team-label,
+        #ftb-tactics-container {
+            pointer-events: auto;
         }
         #floating-tactics-toolbar {
             left: 10px;
@@ -476,15 +473,24 @@
         <div id="replay-seek-row"
             ontouchstart="event.stopPropagation()"
             onclick="event.stopPropagation()"
-            style="display:flex;position:absolute;bottom:10px;left:50%;transform:translateX(-50%);width:88%;max-width:420px;background:rgba(26,32,44,0.82);border-radius:14px;padding:7px 14px;align-items:center;gap:8px;z-index:60;box-shadow:0 2px 10px rgba(0,0,0,0.4);">
-            <button id="btn-pause-bar" onclick="toggleReplayPause()" style="background:none;border:none;color:#f6ad55;font-size:18px;line-height:1;cursor:pointer;padding:0;min-width:20px;">⏸</button>
+            style="display:flex;position:absolute;bottom:10px;left:50%;transform:translateX(-50%);width:88%;max-width:420px;background:rgba(26,32,44,0.82);border-radius:14px;padding:7px 14px;align-items:center;gap:8px;z-index:60;box-shadow:0 2px 10px rgba(0,0,0,0.4);pointer-events:none;">
+            <button id="btn-pause-bar" onclick="toggleReplayPause()" style="background:none;border:none;color:#f6ad55;font-size:18px;line-height:1;cursor:pointer;padding:0;min-width:20px;pointer-events:auto;">⏸</button>
             <span id="replay-cur-time" style="color:#f6ad55;font-size:11px;min-width:28px;">0.0s</span>
             <input type="range" id="replay-seekbar" min="0" max="1000" value="0"
                 oninput="seekReplay(this.value)"
                 onmousedown="replayPaused=true" onmouseup="replayPaused=false;replayWallStart=Date.now()"
                 ontouchstart="replayPaused=true" ontouchend="replayPaused=false;replayWallStart=Date.now()"
-                style="flex:1;cursor:pointer;accent-color:#f6ad55;height:4px;">
+                style="flex:1;cursor:pointer;accent-color:#f6ad55;height:4px;pointer-events:auto;">
             <span id="replay-total-time" style="color:#718096;font-size:11px;min-width:28px;text-align:right;">0.0s</span>
+        </div>
+
+        <!-- Floating stop-recording button (shown only while recording) -->
+        <div id="floating-stop-rec"
+            ontouchstart="event.stopPropagation()"
+            onclick="event.stopPropagation()"
+            style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);z-index:60;flex-direction:column;align-items:center;gap:6px;">
+            <button onclick="toggleRecord()" style="width:54px;height:54px;border-radius:50%;border:3px solid #e53e3e;background:rgba(197,48,48,0.85);color:white;font-size:22px;cursor:pointer;box-shadow:0 0 16px #e53e3e88;animation:rec-pulse 1s infinite;">⏹</button>
+            <span id="floating-rec-timer" style="color:#e53e3e;font-size:11px;font-weight:900;text-shadow:0 0 6px #e53e3e;">0s</span>
         </div>
 
         <!-- Left floating tactics toolbar -->
@@ -516,7 +522,6 @@
     </div>
 
     <div class="control-panel" id="control-panel">
-        <div id="panel-toggle" onclick="togglePanel()"><div id="panel-toggle-pill"></div></div>
         <div class="panel-body">
         <div class="filter-bar">
             <div onclick="setCategoryFilter('all')" id="filter-all" class="filter-btn active" data-i18n="all">All</div>
@@ -641,6 +646,34 @@
     function init() {
         resizeCanvas(); createTokens(); setupInteraction(); setupDrawing(); loadFromStorage(); setLanguage('en'); initPageDots(); initTacticsToolbarScroll();
         window.addEventListener('resize', resizeCanvas);
+        lockPortrait();
+    }
+
+    function lockPortrait() {
+        // Try native Screen Orientation API first (Android Chrome, desktop)
+        if (screen.orientation && screen.orientation.lock) {
+            screen.orientation.lock('portrait').catch(() => applyPortraitFallback());
+        } else {
+            applyPortraitFallback();
+        }
+    }
+
+    function applyPortraitFallback() {
+        // CSS transform fallback for iOS Safari
+        function fix() {
+            const landscape = window.innerWidth > window.innerHeight;
+            const app = document.getElementById('app-container');
+            if (landscape) {
+                const w = window.innerWidth, h = window.innerHeight;
+                app.style.cssText = `position:fixed;top:0;left:${w}px;width:${h}px;height:${w}px;transform:rotate(-90deg);transform-origin:top left;overflow:hidden;`;
+            } else {
+                app.style.cssText = '';
+            }
+            resizeCanvas();
+        }
+        window.addEventListener('resize', fix);
+        window.addEventListener('orientationchange', () => setTimeout(fix, 100));
+        fix();
     }
 
     function resizeCanvas() {
@@ -1026,6 +1059,15 @@
     }
 
     function togglePanel() {
+        // Convert all px positions to % before the pitch resizes
+        const pr = pitch.getBoundingClientRect();
+        tokens.forEach(tk => {
+            if (tk.el.style.left.endsWith('px'))
+                tk.el.style.left = `${(parseFloat(tk.el.style.left) / pr.width) * 100}%`;
+            if (tk.el.style.top.endsWith('px'))
+                tk.el.style.top = `${(parseFloat(tk.el.style.top) / pr.height) * 100}%`;
+        });
+
         const collapsed = document.getElementById('control-panel').classList.toggle('collapsed');
         const show = collapsed ? 'flex' : 'none';
         document.getElementById('floating-toolbar').style.display = show;
@@ -1112,12 +1154,13 @@
     }
 
     function toggleRecord() {
+        const panelCollapsed = document.getElementById('control-panel').classList.contains('collapsed');
         if (recording) {
             // Stop recording
             recording = false;
             clearInterval(recordInterval);
             recordInterval = null;
-            captureFrame(); // capture final frame
+            captureFrame();
             document.getElementById('btn-record').innerHTML = '⏺ Record';
             document.getElementById('btn-record').style.background = '';
             document.getElementById('rec-timer').textContent = '';
@@ -1127,28 +1170,36 @@
                 replayBtn.disabled = false; replayBtn.style.opacity = '1';
                 saveBtn.disabled = false; saveBtn.style.opacity = '1';
             }
+            // Hide stop button, restore toolbars if panel is collapsed
+            document.getElementById('floating-stop-rec').style.display = 'none';
+            if (panelCollapsed) {
+                document.getElementById('floating-toolbar').style.display = 'flex';
+                document.getElementById('floating-tactics-toolbar').style.display = 'flex';
+            }
             syncFloatingToolbar();
         } else {
             // Start recording — clear any previous
             recordFrames = [];
             recording = true;
             recordStart = Date.now();
-            captureFrame(); // capture initial frame
+            captureFrame();
             recordInterval = setInterval(() => {
                 captureFrame();
                 const elapsed = Math.floor((Date.now() - recordStart) / 1000);
                 document.getElementById('rec-timer').textContent = `${elapsed}s`;
-                document.getElementById('ftb-record').textContent = '⏹';
+                document.getElementById('floating-rec-timer').textContent = `${elapsed}s`;
             }, 100);
             document.getElementById('btn-record').innerHTML = '⏹ Stop';
             document.getElementById('btn-record').style.background = '#c53030';
-            // Disable replay/save while recording
             const replayBtn = document.getElementById('btn-replay');
             const saveBtn = document.getElementById('btn-save-rec');
             replayBtn.disabled = true; replayBtn.style.opacity = '0.4';
             saveBtn.disabled = true; saveBtn.style.opacity = '0.4';
+            // Hide toolbars, show stop button (whether panel open or collapsed)
+            document.getElementById('floating-toolbar').style.display = 'none';
+            document.getElementById('floating-tactics-toolbar').style.display = 'none';
+            document.getElementById('floating-stop-rec').style.display = 'flex';
             syncFloatingToolbar();
-            document.getElementById('ftb-record').style.background = '#c53030';
         }
     }
 
